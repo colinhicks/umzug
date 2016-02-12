@@ -25,7 +25,8 @@ var Umzug = module.exports = redefine.Class({
       params:  [],
       path:    path.resolve(process.cwd(), 'migrations'),
       pattern: /^\d+[\w-]+\.js$/,
-      wrap:    function (fun) { return fun; }
+      wrap:    function (fun) { return fun; },
+      handler: function(file, options) { return new Migration(file, options); }
     }, this.options.migrations);
 
     this.storage = this._initStorage();
@@ -99,7 +100,7 @@ var Umzug = module.exports = redefine.Class({
 
   executed: function () {
     return Bluebird.resolve(this.storage.executed()).bind(this).map(function (file) {
-      return new Migration(file);
+      return this.options.migrations.handler(file);
     });
   },
 
@@ -281,7 +282,7 @@ var Umzug = module.exports = redefine.Class({
         return path.resolve(this.options.migrations.path, file);
       })
       .map(function (path) {
-        return new Migration(path, this.options);
+        return this.options.migrations.handler(path, this.options);
       });
   },
 
